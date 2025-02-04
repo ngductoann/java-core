@@ -1,7 +1,6 @@
 # Object Oriented Programming
 
 <!--toc:start-->
-
 - [Object Oriented Programming](#object-oriented-programming)
   - [What is Object Oriented Programming](#what-is-object-oriented-programming)
   - [Class-based Programming](#class-based-programming)
@@ -31,7 +30,7 @@
     - [Instance Methods](#instance-methods)
     - [Summary](#summary)
   - [Plain Old Java Object (POJO)](#plain-old-java-object-pojo)
-    - [The Entity - The Student Table](#the-entity---the-student-table)
+    - [The Entity - The Student Table](#the-entity-the-student-table)
       - [Annotation](#annotation)
       - [Overridden Method](#overridden-method)
     - [The POJO (Entity) vs. The Record](#the-pojo-entity-vs-the-record)
@@ -41,6 +40,20 @@
       - [POJO vs. Record](#pojo-vs-record)
   - [Inheritance](#inheritance)
     - [The Animal Class](#the-animal-class)
+    - [supper keyword](#supper-keyword)
+    - [Code Re-use](#code-re-use)
+    - [Overriding a method](#overriding-a-method)
+  - [java.lang.Object](#javalangobject)
+    - [Every class inherits from Object](#every-class-inherits-from-object)
+  - [this vs super](#this-vs-super)
+    - [Keyword this](#keyword-this)
+    - [Keyword super](#keyword-super)
+    - [this() vs super() call](#this-vs-super-call)
+    - [Example bad and good constructor](#example-bad-and-good-constructor)
+      - [Bad constructor](#bad-constructor)
+      - [Good constructor](#good-constructor)
+    - [super() call example.](#super-call-example)
+<!--toc:end-->
 
 ## What is Object Oriented Programming
 
@@ -1213,7 +1226,7 @@ public class Animal {
 
 ```mermaid
 classDiagram
-  Animal <-- Dog
+  Animal <|-- Dog
   note for Dog "inherits"
   class Animal{
     +String type
@@ -1252,5 +1265,526 @@ public class Dog extends Animal {
 }
 ```
 
+### supper keyword
+
 **super() is a lot like this().** It's a way to call a constructor on the super
 class directly from the sub class's constructor.
+
+Like **this()**, it has to be the first statement of constructor. Because of
+that rule, **this()** and **super()** can never be called from the same
+constructor.
+
+If we don't make a call **super()**, then java makes it for we using super's
+default constructor. If super class doesn't have a default constructor, then you
+must explicitly call **super()** in all of constructors, passing the right
+arguments to that constructor.
+
+Code example:
+
+```java
+public class Animal {
+
+    private String type;
+    private String size;
+    private double weight;
+
+    public Animal() {}
+
+    public Animal(String type, String size, double weight) {
+        this.type = type;
+        this.size = size;
+        this.weight = weight;
+    }
+
+    @Override
+    public String toString() {
+        return "Animal [type=" + type + ", size=" + size + ", weight=" + weight + "]";
+    }
+
+    public void move(String speed) {
+        System.out.println(type + " moves " + speed);
+    }
+
+    public void makeNoise() {
+        System.out.println(type + " makes some kind of noise");
+    }
+}
+```
+
+```java
+public class Dog extends Animal {
+
+    private String earShape;
+    private String tailShape;
+
+    public Dog() {
+        super();
+    }
+
+    public Dog(String type, double weight, String earShape, String tailShape) {
+        super(type, weight < 15 ? "small" : (weight < 35 ? "medium" : "large"), weight);
+        this.earShape = earShape;
+        this.tailShape = tailShape;
+    }
+
+    public Dog(String type, double weight) {
+        this(type, weight, "Perky", "Curled");
+    }
+
+    @Override
+    public String toString() {
+        return "Dog [earShape="
+                + earShape
+                + ", tailShape="
+                + tailShape
+                + ", toString()="
+                + super.toString()
+                + "]";
+    }
+}
+```
+
+### Code Re-use
+
+All subclasses can execute methods even though the code is declared on the
+parent class. The code doesn't have to be duplicated in each subclass. Example
+main class.
+
+```java
+public class App {
+    public static void main(String[] args) throws Exception {
+        Animal animal = new Animal("Generic Animal", "Huge", 400);
+        doAnimalStuff(animal, "fast");
+
+        Dog dog = new Dog();
+        doAnimalStuff(dog, "fast");
+    }
+
+    public static void doAnimalStuff(Animal animal, String speed) {
+        animal.makeNoise();
+        animal.move(speed);
+        System.out.println(animal);
+        System.out.println("_______");
+    }
+}
+```
+
+Output:
+
+```text
+Generic Animal makes some kind of noise
+Generic Animal moves fast
+Animal [type=Generic Animal, size=Huge, weight=400.0]
+_______
+null makes some kind of noise
+null moves fast
+Dog [earShape=null, tailShape=null, toString()=Animal [type=null, size=null, weight=0.0]]
+_______
+```
+
+We can use code from the parent. Or we can change that code for the
+subclass.
+
+### Overriding a method
+
+Overriding a method is when we create a method on a subclass, which has the
+same signature as a method on a super class. We overridden a parent class method
+when we want the child class to show different behavior for that method.
+
+```java
+public class Dog extends Animal {
+
+    private String earShape;
+    private String tailShape;
+
+    public Dog() {
+        super();
+    }
+
+    public Dog(String type, double weight, String earShape, String tailShape) {
+        super(type, weight < 15 ? "small" : (weight < 35 ? "medium" : "large"), weight);
+        this.earShape = earShape;
+        this.tailShape = tailShape;
+    }
+
+    public Dog(String type, double weight) {
+        this(type, weight, "Perky", "Curled");
+    }
+
+    @Override
+    public String toString() {
+        return "Dog [earShape="
+                + earShape
+                + ", tailShape="
+                + tailShape
+                + ", toString()="
+                + super.toString()
+                + "]";
+    }
+
+    public void makeNoise() {}
+
+    @Override
+    public void move(String speed){
+        super.move(speed);
+        System.out.println("Dogs walk, run and wag their tail");
+    }
+}
+```
+
+```java
+public class App {
+    public static void main(String[] args) throws Exception {
+        Animal animal = new Animal("Generic Animal", "Huge", 400);
+        doAnimalStuff(animal, "fast");
+
+        Dog dog = new Dog();
+        doAnimalStuff(dog, "fast");
+    }
+
+    public static void doAnimalStuff(Animal animal, String speed) {
+        animal.makeNoise();
+        animal.move(speed);
+        System.out.println(animal);
+        System.out.println("_______");
+    }
+}
+```
+
+Output:
+
+```text
+Generic Animal makes some kind of noise
+Generic Animal moves fast
+Animal [type=Generic Animal, size=Huge, weight=400.0]
+_______
+null moves fast
+Dogs walk, run and wag their tail
+Dog [earShape=null, tailShape=null, toString()=Animal [type=null, size=null, weight=0.0]]
+```
+
+The overridden method can do one of three things:
+
+- It can implement completely different behavior, overriding the behavior of the
+  parent.
+- It can simply call the parent class's method, which is somewhat redundant to
+  do.
+- Or the method can call the parent class's method and include other code to
+  run so it can extend the functionality for the Dog, for that behavior.
+
+## java.lang.Object
+
+Every class we create in Java actually extends a special Java class. That class
+named Object, and it's in the java.lang package.
+
+### Every class inherits from Object
+
+```mermaid
+classDiagram
+  Object <|-- Main
+  Object <|-- String
+  class Object{
+    clone() Object
+    equals(obj:Object) boolean
+    hashCode() int
+    toString() String
+  }
+  class Main{
+    static main()
+  }
+  class String{
+  charAt(int, index) char
+  equals(obj: Object) boolean
+  toString() String
+  static valueOf(Object obj) String
+}
+```
+
+Example:
+
+```java
+public class App extends Object {
+    public static void main(String[] args) throws Exception {
+        System.out.println("Hello, World!");
+
+        Student max = new Student("Max", 21);
+        System.out.println(max.toString());
+    }
+}
+
+class Student {
+
+    private String name;
+    private int age;
+
+    Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+Output:
+
+```text
+Student@251a69d7
+```
+
+## this vs super
+
+The keyword **super** is used to access or call the parent class members (both
+variables and methods).
+
+The keyword **this** is used to call the current class members (both variables and
+methods). **this** is required when we have a parameter with the same name as an
+instance variable or field.
+
+> [!NOTE]
+> We can use either of these two keywords anywhere in a class except for static
+> elements such as a static method. Any attempt to do so will lead to compile
+> time errors.
+
+### Keyword this
+
+<div style="display: flex; justify-content: space-between;">
+
+<div style="width: 58%;">
+
+```java
+public class House {
+    private String color;
+
+    public House(String color) {
+        this.color = color;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+}
+```
+
+</div>
+
+<div style="width: 40%;">
+
+The keyword **this** is commonly used within constructors and setters and is
+optionally used within getters.
+
+In this example, We're using the **this** keyword in a **constructor** and **setter** since there's a parameter with the same name as the instance of field.
+
+In the getter, We don't have any parameters so there's no conflict. Therefore, the use of **this** is optional there.
+
+</div>
+
+</div>
+
+### Keyword super
+
+<div style="display: flex; justify-content: space-between;">
+
+<div style="width: 58%;">
+
+```java
+class SuperClass { // parent class aka super class
+    pulic void printMethod() {
+        System.out.println("Printed in SuperClass");
+    }
+}
+
+class SubClass extends SuperClass {
+    // subclass aka child class
+
+    // overrides methods from the parent class
+    @Override
+    public void printMethod() {
+        super.printMethod();
+        // calls the method in the SuperClass(parent)
+        System.out.println("Printed in SubClass");
+    }
+}
+
+class MainClass {
+
+    public static void main(String[] args) {
+        SubClass s = new SubClass();
+        s.printMethod();
+    }
+}
+```
+
+</div>
+
+<div style="width: 40%;">
+
+The keyword **super** is commonly **used** with **method overriding** when we
+call a method with the same name from the parent class.
+
+In this example, We have a method called **printMethod** that calls
+**super.printMethod**.
+
+</div>
+
+</div>
+
+### this() vs super() call
+
+In Java, we've got the **this()** and **super()** calls. Notice the parentheses.
+There are known as calls since they look like regular method calls although
+we're calling certain constructors.
+
+> [!NOTE]
+> Use **this()** to call a constructor from another overloaded constructor in the
+> same class. The call to **this()** can only be used in a constructor, and it
+> must be the first statement in a constructor.
+
+It's used with constructor chaining, in other words, when one constructor calls
+another constructor, and it helps to reduce duplicated code.
+
+The only way to call a parent constructor is by calling **super()**, which calls
+the parent constructors. The java compiler puts a default to call **super()** if
+we don't add it, and it's always a call to the no argument constructor, which is
+inserted by the compiler.
+
+> [!NOTE]
+> The call to **super()** must be the first statement in each constructor.
+
+> [!NOTE]
+> A constructor can have a call to **super()** or **this()**, but never both.
+
+### Example bad and good constructor
+
+#### Bad constructor
+
+```java
+public class Rectangle1 {
+    // Constructors Bad Example
+
+    private int x;
+    private int y;
+    private int width;
+    private int height;
+
+    public Rectangle1() {
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+    }
+
+    public Rectangle1(int width, int height) {
+        this.x = 0;
+        this.y = 0;
+        this.width = width;
+        this.height = height;
+    }
+
+    public Rectangle1(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+}
+```
+
+Here, we have three constructors. All three constructors initialize variables.
+
+There's repeated code in each constructor. We are initializing variables in each
+constructor with some default values.
+
+> [!NOTE] >
+> **We should never write constructors like this.** Let's look at the right way
+> to do this using a **this()** call.
+
+#### Good constructor
+
+```java
+public class Rectangle2 {
+    // Constructors Good Example
+
+    private int x;
+    private int y;
+    private int width;
+    private int height;
+
+    // 1st constructor
+    public Rectangle2() {
+        this(0, 0);
+    }
+
+    // 2nd constructor
+    public Rectangle2(int width, int height) {
+        this(0, 0, width, height);
+    }
+
+    public Rectangle2(int x, int y, int width, int height) {
+        // initialize variables
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+}
+```
+
+In this example, We still have three constructors.
+
+The 1st constructor calls the 2nd constructor, the 2nd constructor call the 3rd
+constructor initializes the instance variables.
+
+The 3rd constructor does all the work. No matter what constructor I call, the
+variables will always be initialized in the 3rd constructor.
+
+> [!NOTE]
+> This is known as constructor chaining, the last constructor has the
+> responsibility to initialize the variables.
+
+### super() call example.
+
+```java
+public class Shape {
+    private int x;
+    private int y;
+
+    public Shape(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+```
+
+```java
+public class Rectangle3 extends Shape {
+    private int width;
+    private int height;
+
+    // 1st constructor
+    private Rectangle3(int x, int y) {
+        this(x, y, 0, 0); // calls 2nd constructor
+    }
+
+    // 2nd constructor
+    public Rectangle3(int x, int y, int width, int height) {
+        super(x, y); // calls constructor from parent (shape)
+        this.width = width;
+        this.height = height;
+    }
+}
+```
+
+In this example, We have a class **Shape**, with x and y instance variables, and
+class **Rectangle** that extends **Shape** with variables width and height.
+
+In the Rectangle class, the 1st constructor is calling the 2nd constructor. The
+2nd constructor call the parent constructor with parameters x and y.
+
+The parent constructor will initialize the x and y variables, while the 2nd
+Rectangle constructor will initialize the width and height variables.
+
+Here, We have both the **super()** and **this()** calls.
